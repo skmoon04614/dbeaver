@@ -2009,7 +2009,7 @@ public abstract class LightGrid extends Canvas {
         bottomIndex = -1;
         int oldRowHeaderWidth = rowHeaderWidth;
         // Item height
-        itemHeight = fontMetrics.getHeight() + 3;
+        itemHeight = fontMetrics.getHeight() + 1;
 
         // Column header height
         int colHeaderHeight = 0;

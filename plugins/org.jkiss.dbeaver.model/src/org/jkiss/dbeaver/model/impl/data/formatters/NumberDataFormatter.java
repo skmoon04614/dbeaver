@@ -39,6 +39,7 @@ public class NumberDataFormatter implements DBDDataFormatter {
     private static final Log log = Log.getLog(NumberDataFormatter.class);
 
     private DecimalFormat numberFormat;
+    private DecimalFormat integerFormat;
     private StringBuffer buffer;
     private FieldPosition position;
     private boolean nativeSpecialValues;
@@ -50,22 +51,31 @@ public class NumberDataFormatter implements DBDDataFormatter {
     public void init(DBSTypedObject type, Locale locale, Map<String, Object> properties)
     {
         numberFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
+        integerFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
         Object useGrouping = properties.get(NumberFormatSample.PROP_USE_GROUPING);
         if (useGrouping != null) {
             numberFormat.setGroupingUsed(CommonUtils.toBoolean(useGrouping));
+            integerFormat.setGroupingUsed(CommonUtils.toBoolean(useGrouping));
         }
         Object groupingSize = properties.get(NumberFormatSample.PROP_GROUPING_SIZE);
         if (groupingSize != null) {
             numberFormat.setGroupingSize(CommonUtils.toInt(groupingSize, numberFormat.getGroupingSize()));
+            integerFormat.setGroupingSize(CommonUtils.toInt(groupingSize, integerFormat.getGroupingSize()));
         }
         Object maxIntDigits = properties.get(NumberFormatSample.PROP_MAX_INT_DIGITS);
         if (maxIntDigits != null) {
             numberFormat.setMaximumIntegerDigits(CommonUtils.toInt(maxIntDigits));
+            integerFormat.setMaximumIntegerDigits(CommonUtils.toInt(maxIntDigits));
         }
         Object minIntDigits = properties.get(NumberFormatSample.PROP_MIN_INT_DIGITS);
         if (minIntDigits != null) {
             numberFormat.setMinimumIntegerDigits(CommonUtils.toInt(minIntDigits));
+            integerFormat.setMinimumIntegerDigits(CommonUtils.toInt(minIntDigits));
         }
+
+        integerFormat.setMinimumFractionDigits(0);
+        integerFormat.setMaximumFractionDigits(0);
+
         if (type != null) {
             int typeScale = type.getScale() != null ? type.getScale() : 0;
             // #6111 + #6914.
@@ -129,6 +139,7 @@ public class NumberDataFormatter implements DBDDataFormatter {
     @Override
     public String formatValue(Object value)
     {
+        DecimalFormat aFormat = numberFormat;
         if (value == null) {
             return null;
         }
@@ -139,6 +150,8 @@ public class NumberDataFormatter implements DBDDataFormatter {
         } else if (value instanceof Float || value instanceof Double) {
             // Convert to BigDecimal so we don't have rounding issues with high minimum fraction digits set
             value = new BigDecimal(value.toString());
+        } else if (value instanceof Integer || value instanceof Long) {
+            aFormat = integerFormat;
         } else if (!(value instanceof Number)) {
             return value.toString();
         }
@@ -146,14 +159,14 @@ public class NumberDataFormatter implements DBDDataFormatter {
             synchronized (this) {
                 buffer.setLength(0);
                 try {
-                    return numberFormat.format(value, buffer, position).toString();
+                    return aFormat.format(value, buffer, position).toString();
                 } catch (ArithmeticException e) {
-                    if (numberFormat.getRoundingMode() == RoundingMode.UNNECESSARY) {
+                    if (aFormat.getRoundingMode() == RoundingMode.UNNECESSARY) {
                         // This type can't use UNNECESSARY rounding. Let's set default one
                         log.debug("Disabling UNNECESSARY rounding for numbers (" + e.getMessage() + ")");
-                        numberFormat.setRoundingMode(RoundingMode.HALF_EVEN);
+                        aFormat.setRoundingMode(RoundingMode.HALF_EVEN);
                     }
-                    return numberFormat.format(value, buffer, position).toString();
+                    return aFormat.format(value, buffer, position).toString();
                 }
             }
         } catch (Exception e) {
