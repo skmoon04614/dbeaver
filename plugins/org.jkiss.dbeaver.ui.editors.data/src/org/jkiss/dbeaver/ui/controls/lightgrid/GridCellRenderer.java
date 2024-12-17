@@ -610,18 +610,18 @@ public class GridCellRenderer extends AbstractRenderer {
             return;
         }
 
-        gc.setTextAntialias(SWT.ON);
+        gc.setTextAntialias(SWT.OFF);
         gc.setForeground(foreground);
 
         final Point extent = gc.stringExtent(text);
 
         if (highlight) {
-            extent.x += 2;
+            extent.x += 1;
 
-            gc.drawRoundRectangle(bounds.x, bounds.y, extent.x, extent.y - 1, 2, 2);
+            gc.drawRoundRectangle(bounds.x, bounds.y, extent.x, extent.y - 1, 1, 2);
 
-            bounds.x += 2;
-            bounds.width -= 2;
+            bounds.x += 1;
+            bounds.width -= 1;
         }
 
         gc.drawString(text, bounds.x, bounds.y, true);

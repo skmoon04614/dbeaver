@@ -156,7 +156,7 @@ class GridColumnRenderer extends AbstractRenderer {
 
             if (hasFilters) {
                 bounds.width -= getFilterControlBounds().width;
-                gc.drawImage(IMAGE_FILTER, bounds.x + bounds.width, bounds.y);
+                // gc.drawImage(IMAGE_FILTER, bounds.x + bounds.width, bounds.y);
                 bounds.width -= IMAGE_SPACING;
             }
         }
